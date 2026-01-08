@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<link rel="preload" as="image" href="/dave.webp">
+<link rel="preload" as="image" href="/1.webp">
+    
+<meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dave Fest 2026 Generator</title>
+    <!-- ИСПРАВЛЕНО: Правильная ссылка на Montserrat -->
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;800&display=swap" rel="stylesheet">
+    <style>
+        body { 
+            font-family: 'Montserrat', sans-serif; 
+            display: flex; justify-content: center; align-items: center; 
+            min-height: 100vh; margin: 0; padding: 20px; color: #fff; 
+            background: #0e1111 url('1.webp') no-repeat center center fixed; 
+            background-size: cover;
+        }
+        #quiz-container { 
+            background: rgba(15, 15, 15, 0.95); padding: 30px; border-radius: 24px; 
+            box-shadow: 0 15px 50px rgba(0,0,0,0.8); width: 100%; max-width: 450px; 
+            text-align: center; border: 1px solid #28a745; backdrop-filter: blur(10px);
+        }
+        .hidden { display: none; }
+        button { 
+            background: #28a745; color: white; border: none; padding: 15px; 
+            border-radius: 12px; cursor: pointer; margin-top: 15px; width: 100%; 
+            font-size: 16px; font-weight: bold; transition: 0.3s;
+        }
+        button:hover { background: #218838; transform: scale(1.02); }
+        input { 
+            padding: 15px; width: 100%; box-sizing: border-box; margin-bottom: 15px; 
+            border: 2px solid #333; border-radius: 12px; background: #000; color: #fff; font-size: 18px;
+        }
+        canvas { 
+            max-width: 100%; height: auto; margin-top: 20px; 
+            border-radius: 15px; border: 3px solid #28a745; background: #222;
+        }
+        h2 { color: #28a745; margin-bottom: 20px; }
+    </style>
+</head>
+<body>
+
+<div id="quiz-container">
+    <div id="step-container">
+        <h2 id="question-text">Загрузка...</h2>
+        <div id="answers"></div>
+    </div>
+
+    <div id="result-container" class="hidden">
+        <h2>Твоя карточка Dave Fest</h2>
+        <canvas id="resultCanvas" width="800" height="1100"></canvas>
+        <button onclick="saveQuizImage()">💾 СКАЧАТЬ КАРТОЧКУ</button>
+    </div>
+</div>
+
+<script>
+    // УБЕДИСЬ, ЧТО ФАЙЛ НАЗЫВАЕТСЯ ИМЕННО ТАК (РЕГИСТР ВАЖЕН!)
+    const TEMPLATE_IMG = 'dave.webp'; 
+
+    const questions = [
+        { q: "Твой Никнейм?", type: "input" },
+        { 
+            q: "Оцените уровень организации Dave Fest от 1 до 5:", 
+            type: "choice", 
+            options: [" Очень плохо", " Плохо", " Терпимо", " Хорошо", " Отлично "], 
+            required: " Отлично " 
+        },
+        { q: "Выберите номинацию:", type: "choice", options: ["Плаванье лягушкой", "Хоровое квакание", "Друг организатора", "Я купил место"] },
+        { q: "Что нужно для POWER?", type: "choice", options: ["Motivation", "Пластиковый стул", "White Monster", "Всё вместе"] },
+        { q: "Придете еще?", type: "choice", options: ["Да!"] }
+    ];
+
+    let currentStep = 0;
+    let userName = "";
+
+    function showStep() {
+        const container = document.getElementById('answers');
+        const questionTitle = document.getElementById('question-text');
+        container.innerHTML = "";
+        let step = questions[currentStep];
+        questionTitle.innerText = step.q;
+
+        if (step.type === "input") {
+            const input = document.createElement('input');
+            input.id = "nameInput";
+            input.placeholder = "Введите имя...";
+            const btn = document.createElement('button');
+            btn.innerText = "ДАЛЕЕ →";
+            btn.onclick = () => {
+                userName = document.getElementById('nameInput').value.trim() || "DAVE GUEST";
+                nextStep();
+            };
+            container.appendChild(input);
+            container.appendChild(btn);
+        } else {
+            step.options.forEach(opt => {
+                const btn = document.createElement('button');
+                btn.innerText = opt;
+                btn.onclick = () => {
+                    if (step.required && opt !== step.required) {
+                        alert("⛔ ОШИБКА: Только 5 звезд!");
+                    } else {
+                        nextStep();
+                    }
+                };
+                container.appendChild(btn);
+            });
+        }
+    }
+
+    function nextStep() {
+        currentStep++;
+        if (currentStep < questions.length) {
+            showStep();
+        } else {
+            generateFinalCard();
+        }
+    }
+
+    function generateFinalCard() {
+        document.getElementById('step-container').classList.add('hidden');
+        document.getElementById('result-container').classList.remove('hidden');
+
+        const canvas = document.getElementById('resultCanvas');
+        const ctx = canvas.getContext('2d');
+        
+        const img = new Image();
+        // Важно: onload должен быть ПЕРЕД src
+        img.onload = function() {
+            // Рисуем картинку
+            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+            
+            // Настройка текста
+            const x = canvas.width / 2;
+            const y = canvas.height * 0.85; 
+
+            ctx.shadowColor = "rgba(0, 0, 0, 0.8)";
+            ctx.shadowBlur = 10;
+            ctx.fillStyle = '#ffffff'; 
+            ctx.strokeStyle = '#28a745'; 
+            ctx.lineWidth = 3;
+            ctx.font = '800 60px Montserrat, sans-serif';
+            ctx.textAlign = 'center';
+            
+            ctx.strokeText(userName.toUpperCase(), x, y);
+            ctx.fillText(userName.toUpperCase(), x, y);
+        };
+
+        img.onerror = () => {
+            alert("Файл " + TEMPLATE_IMG + " не найден!");
+        };
+
+        // Задаем источник в самом конце
+ctx.clearRect(0,0,canvas.width,canvas.height);
+ctx.fillStyle = "#000";
+ctx.fillRect(0,0,canvas.width,canvas.height);
+ctx.fillStyle = "#28a745";
+ctx.font = "24px Montserrat";
+ctx.fillText("Загрузка...", canvas.width/2, canvas.height/2);
+
+        img.src = TEMPLATE_IMG;
+    }
+
+    function saveQuizImage() {
+        const canvas = document.getElementById('resultCanvas');
+        try {
+            const link = document.createElement('a');
+            link.download = `Card_${userName}.png`;
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+        } catch (e) {
+            alert("Ошибка сохранения. Попробуй открыть через Netlify или Live Server.");
+        }
+    }
+
+    showStep();
+</script>
+</body>
+</html>
+
