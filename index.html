@@ -100,7 +100,7 @@
                 btn.innerText = opt;
                 btn.onclick = () => {
                     if (step.required && opt !== step.required) {
-                        alert("⛔ ОШИБКА");
+                        alert("⛔ ОШИБКА - выберите правильную оценку");
                     } else {
                         nextStep();
                     }
@@ -179,6 +179,7 @@ ctx.fillText("Загрузка...", canvas.width/2, canvas.height/2);
 </script>
 </body>
 </html>
+
 
 
 
